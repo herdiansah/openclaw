@@ -1,0 +1,17 @@
+# OpenAI Sidecar - Ignore sensitive files
+
+# API Configuration (contains secrets!)
+config.json
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+.cache/
+
+# Node.js
+node_modules/
+package-lock.json
+tokens/*.json

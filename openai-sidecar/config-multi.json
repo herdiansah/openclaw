@@ -1,0 +1,75 @@
+{
+  "version": "1.0",
+  "mode": "multi-account",
+  "accounts": {
+    "1": {
+      "name": "Account 1",
+      "tokenFile": "tokens/account-1.json",
+      "enabled": true,
+      "priority": 1,
+      "models": [
+        "gpt-5.3-codex"
+      ],
+      "quotaLimit": 100,
+      "quotaUsed": 3,
+      "lastUsed": 1774458485719,
+      "healthStatus": "unknown"
+    },
+    "2": {
+      "name": "Account 2",
+      "tokenFile": "tokens/account-2.json",
+      "enabled": true,
+      "priority": 2,
+      "models": [
+        "gpt-5.3-codex"
+      ],
+      "quotaLimit": 100,
+      "quotaUsed": 0,
+      "lastUsed": null,
+      "healthStatus": "unknown"
+    },
+    "3": {
+      "name": "Account 3",
+      "tokenFile": "tokens/account-3.json",
+      "enabled": true,
+      "priority": 3,
+      "models": [
+        "gpt-5.3-codex"
+      ],
+      "quotaLimit": 100,
+      "quotaUsed": 0,
+      "lastUsed": null,
+      "healthStatus": "unknown"
+    },
+    "4": {
+      "name": "Account 4",
+      "tokenFile": "tokens/account-4.json",
+      "enabled": true,
+      "priority": 4,
+      "models": [
+        "gpt-5.3-codex"
+      ],
+      "quotaLimit": 100,
+      "quotaUsed": 0,
+      "lastUsed": null,
+      "healthStatus": "unknown"
+    }
+  },
+  "rotation": {
+    "strategy": "load-balance",
+    "strategies": [
+      "round-robin",
+      "load-balance",
+      "priority",
+      "random"
+    ],
+    "failover": true,
+    "healthCheckInterval": 300
+  },
+  "defaults": {
+    "model": "gpt-5.3-codex",
+    "maxTokens": 4096,
+    "temperature": 0.7,
+    "timeout": 120000
+  }
+}
