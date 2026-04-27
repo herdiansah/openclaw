@@ -1,0 +1,11 @@
+{
+  "id": "qdrant-auto-context",
+  "name": "Qdrant Auto Context",
+  "description": "Automatically injects vector memory search results into every agent prompt using Qdrant + configurable embeddings. Reads config from qdrant-setup/qdrant-memory.env.",
+  "version": "1.0.0",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

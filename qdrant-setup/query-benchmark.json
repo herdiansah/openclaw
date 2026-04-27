@@ -1,0 +1,175 @@
+{
+  "cases": [
+    {
+      "name": "memory-weather-april-6",
+      "query": "cuaca cibinong 6 april",
+      "kind": "memory",
+      "project": "",
+      "expectedSources": ["memory/2026-04-06.md"],
+      "notes": "Weather memory should land on the April 6 daily note."
+    },
+    {
+      "name": "memory-weather-today",
+      "query": "cuaca cibinong 10 april",
+      "kind": "memory",
+      "project": "",
+      "expectedSources": ["memory/2026-04-10.md"],
+      "notes": "Explicit date query should prefer the current daily note over long-term memory."
+    },
+    {
+      "name": "memory-puppeteer-service",
+      "query": "puppeteer screenshot microservice public url",
+      "kind": "memory",
+      "project": "",
+      "expectedSources": ["MEMORY.md", "memory/2026-04-08.md"],
+      "notes": "Should surface the long-term memory or daily note about the screenshot microservice."
+    },
+    {
+      "name": "cbt-results-generic",
+      "query": "grading results sql",
+      "kind": "code",
+      "project": "cbt-app",
+      "expectedSources": ["code:cbt-app:backend/src/api/results-pg.js"],
+      "notes": "Generic grading query should prefer the results implementation file."
+    },
+    {
+      "name": "cbt-results-exact-file",
+      "query": "results-pg.js grading sql",
+      "kind": "code",
+      "project": "cbt-app",
+      "expectedSources": ["code:cbt-app:backend/src/api/results-pg.js"],
+      "notes": "Exact file query should strongly prefer results-pg.js."
+    },
+    {
+      "name": "cbt-auth-generic",
+      "query": "auth token login middleware",
+      "kind": "code",
+      "project": "cbt-app",
+      "expectedSources": [
+        "code:cbt-app:backend/src/api/auth.js",
+        "code:cbt-app:backend/src/api/auth-pg.js",
+        "code:cbt-app:backend/src/middleware/auth.js"
+      ],
+      "notes": "Auth-related queries should surface auth API or middleware files."
+    },
+    {
+      "name": "cbt-student-class-query",
+      "query": "student class api postgres",
+      "kind": "code",
+      "project": "cbt-app",
+      "expectedSources": [
+        "code:cbt-app:backend/src/api/students-pg.js",
+        "code:cbt-app:backend/src/api/classes-pg.js"
+      ],
+      "notes": "Student/class PostgreSQL API query should surface the corresponding handlers."
+    },
+    {
+      "name": "app-builder-queue-generic",
+      "query": "queue worker redis job",
+      "kind": "code",
+      "project": "app-builder",
+      "expectedSources": [
+        "code:app-builder:apps/worker/src/index.ts",
+        "code:app-builder:apps/api/src/queue/client.ts"
+      ],
+      "notes": "Queue queries should prefer worker and queue client files."
+    },
+    {
+      "name": "app-builder-queue-exactish",
+      "query": "queue client ts worker redis",
+      "kind": "code",
+      "project": "app-builder",
+      "expectedSources": [
+        "code:app-builder:apps/api/src/queue/client.ts",
+        "code:app-builder:apps/worker/src/index.ts"
+      ],
+      "notes": "Path-like queue query should keep queue/client.ts near the top."
+    },
+    {
+      "name": "app-builder-db-env",
+      "query": "database pool env api",
+      "kind": "code",
+      "project": "app-builder",
+      "expectedSources": [
+        "code:app-builder:apps/api/src/env.ts",
+        "code:app-builder:apps/api/src/index.ts"
+      ],
+      "notes": "Database/env related query should prefer API env or API bootstrap files."
+    },
+    {
+      "name": "flashya-projects-api",
+      "query": "projects upload api route",
+      "kind": "code",
+      "project": "flashya-website",
+      "expectedSources": [
+        "code:flashya-website:src/app/api/projects/route.ts",
+        "code:flashya-website:src/app/api/upload/route.ts"
+      ],
+      "notes": "Flashya project API query should surface the route handlers."
+    },
+    {
+      "name": "flashya-portfolio-ui",
+      "query": "portfolio grid hero navbar",
+      "kind": "code",
+      "project": "flashya-website",
+      "expectedSources": [
+        "code:flashya-website:src/components/PortfolioGrid.tsx",
+        "code:flashya-website:src/components/Hero.tsx",
+        "code:flashya-website:src/components/Navbar.tsx"
+      ],
+      "notes": "UI query should surface the corresponding React components."
+    },
+    {
+      "name": "planner-ai-provider",
+      "query": "ai provider multi model planner",
+      "kind": "code",
+      "project": "kuproy-planner",
+      "expectedSources": [
+        "code:kuproy-planner:src/ai-provider.js",
+        "code:kuproy-planner:kuproy-plan.js"
+      ],
+      "notes": "Planner AI query should surface provider logic or CLI entrypoint."
+    },
+    {
+      "name": "coolify-telegram-bot",
+      "query": "telegram deploy bot coolify",
+      "kind": "code",
+      "project": "coolify-deploy-cli",
+      "expectedSources": [
+        "code:coolify-deploy-cli:telegram-bot.js",
+        "code:coolify-deploy-cli:coolify-deploy.js"
+      ],
+      "notes": "Coolify Telegram query should surface the bot or deploy script."
+    },
+    {
+      "name": "pulseboard-react-app",
+      "query": "animated background react app",
+      "kind": "code",
+      "project": "pulseboard-landing",
+      "expectedSources": [
+        "code:pulseboard-landing:src/AnimatedBackground.jsx",
+        "code:pulseboard-landing:src/App.jsx"
+      ],
+      "notes": "Pulseboard landing query should surface the main React files."
+    },
+    {
+      "name": "taman-safari-content",
+      "query": "ticket prices content safari bali",
+      "kind": "code",
+      "project": "taman-safari-bali",
+      "expectedSources": [
+        "code:taman-safari-bali:src/content/data.json",
+        "code:taman-safari-bali:src/lib/content.ts"
+      ],
+      "notes": "Content query should surface the structured content files."
+    },
+    {
+      "name": "cbt-saas-docs-roles",
+      "query": "user roles permissions cbt saas",
+      "kind": "code",
+      "project": "cbt-saas-docs",
+      "expectedSources": ["code:cbt-saas-docs:USER-ROLES-PERMISSIONS.md"],
+      "notes": "Docs-only project should surface the permissions document."
+    }
+  ]
+}

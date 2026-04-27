@@ -1,0 +1,34 @@
+{
+  "domainRules": [
+    {
+      "name": "grading",
+      "trigger": ["grading", "grade", "score", "result", "results"],
+      "synonyms": ["results", "results-pg", "score", "scores", "grading", "grade", "exam_sessions", "total_score"],
+      "roles": ["results", "questions", "scores"]
+    },
+    {
+      "name": "auth",
+      "trigger": ["auth", "login", "token", "jwt", "session"],
+      "synonyms": ["auth", "login", "token", "jwt", "middleware", "verifytoken", "requirerole"],
+      "roles": ["auth", "middleware", "login"]
+    },
+    {
+      "name": "queue",
+      "trigger": ["queue", "worker", "redis", "job", "bullmq"],
+      "synonyms": ["queue", "worker", "redis", "bullmq", "job", "client", "prefix"],
+      "roles": ["worker", "queue", "client"]
+    },
+    {
+      "name": "exam-domain",
+      "trigger": ["exam", "question", "answer", "student", "class"],
+      "synonyms": ["exam", "exams", "question", "questions", "answer", "answers", "student", "students", "class", "classes"],
+      "roles": ["questions", "students", "classes", "exams"]
+    },
+    {
+      "name": "database",
+      "trigger": ["database", "sql", "postgres", "mysql", "query"],
+      "synonyms": ["database", "sql", "postgres", "mysql", "query", "pool", "transaction", "db"],
+      "roles": ["database", "config", "db"]
+    }
+  ]
+}

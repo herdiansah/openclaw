@@ -91,6 +91,69 @@ OPENCLAW_QDRANT_ACTIVE_PROJECT=app-builder
 */30 * * * * cd /path/to/openclaw && /usr/bin/flock -n /tmp/openclaw-qdrant-index.lock ./scripts/qdrant-memory-run-from-env.sh >> ./memory/cron-qdrant-memory.log 2>&1
 ```
 
+## Backup & Restore
+
+### Create snapshot
+```bash
+curl -X POST "http://127.0.0.1:6333/collections/openclaw_memory/snapshots"
+```
+Snapshots are saved to `/var/lib/qdrant/snapshots/openclaw_memory/`.
+
+Copy to a safe location with a readable name:
+```bash
+cp /var/lib/qdrant/snapshots/openclaw_memory/<snapshot-name>.snapshot \
+   qdrant-setup/backup-<model>-<dim>dim-$(date +%Y%m%d).snapshot
+```
+
+### Restore snapshot
+```bash
+curl -X POST "http://127.0.0.1:6333/collections/openclaw_memory/snapshots/recover" \
+  -H "Content-Type: application/json" \
+  -d '{"location": "file:///var/lib/qdrant/snapshots/openclaw_memory/<snapshot-name>.snapshot"}'
+```
+
+> **Note:** Always create a snapshot before changing embedding model or vector dimension, since the collection must be dropped and recreated — the snapshot is the only way to roll back.
+
+### Current backups
+| File | Model | Dim | Date | Points |
+|------|-------|-----|------|--------|
+| `backup-gemini-3072dim-20260328.snapshot` | gemini-embedding-001 | 3072 | 2026-03-28 | 5150 |
+
+## Verifying the qdrant-auto-context plugin
+
+The `qdrant-auto-context` plugin fires on every agent session. Use these commands to confirm it is loaded and running.
+
+### Check plugin is active (quick)
+```bash
+grep "qdrant-auto-context" /tmp/openclaw/openclaw-$(date +%Y-%m-%d).log | tail -5 | python3 -c "
+import sys, json
+for line in sys.stdin:
+    try:
+        d = json.loads(line)
+        print(d['time'], '|', d['1'])
+    except:
+        print(line.strip()[:120])
+"
+```
+Expected output: `[qdrant-auto-context] active — collection=openclaw_memory limit=5 minScore=0.55`
+
+### Count activations today
+```bash
+grep "qdrant-auto-context" /tmp/openclaw/openclaw-$(date +%Y-%m-%d).log | wc -l
+```
+
+### Follow live as agents are called
+```bash
+tail -f /tmp/openclaw/openclaw-$(date +%Y-%m-%d).log | grep --line-buffered "qdrant"
+```
+
+### Check for errors
+```bash
+grep -i "qdrant" /tmp/openclaw/openclaw-$(date +%Y-%m-%d).log | grep -i "error\|warn\|fail" | tail -10
+```
+
+> **Note:** Log path uses today's date automatically via `$(date +%Y-%m-%d)` — no editing needed day to day.
+
 ## Notes
 - `scripts/qdrant-memory-index.mjs` handles:
   - deterministic UUID point IDs for Qdrant

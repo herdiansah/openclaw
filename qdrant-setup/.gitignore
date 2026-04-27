@@ -1,0 +1,6 @@
+# Active env file — contains API keys, never commit
+qdrant-memory.env
+
+# Claude Code internal directory
+.claude/
+backup-gemini-3072dim-20260328.snapshot

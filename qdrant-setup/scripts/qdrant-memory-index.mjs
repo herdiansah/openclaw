@@ -53,9 +53,6 @@ const cfg = {
   ),
   codeMaxFileBytes: Number(process.env.OPENCLAW_QDRANT_CODE_MAX_FILE_BYTES || "262144"),
   codeMaxFiles: Number(process.env.OPENCLAW_QDRANT_CODE_MAX_FILES || "5000"),
-  codeMaxChunksPerFile: Number(process.env.OPENCLAW_QDRANT_CODE_MAX_CHUNKS_PER_FILE || "24"),
-  codeSkipGenerated:
-    String(process.env.OPENCLAW_QDRANT_CODE_SKIP_GENERATED || "true").toLowerCase() === "true",
 };
 
 function log(msg) {
@@ -71,7 +68,7 @@ function hexToUuid(hex) {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20, 32)}`;
 }
 
-function chunkText(text, maxChars, overlapChars = 200) {
+function chunkText(text, maxChars) {
   const paragraphs = text
     .split(/\n\s*\n/g)
     .map((p) => p.trim())
@@ -117,158 +114,7 @@ function chunkText(text, maxChars, overlapChars = 200) {
   if (current) {
     chunks.push(current);
   }
-
-  // Add overlap between chunks for better context continuity
-  if (chunks.length > 1 && overlapChars > 0) {
-    const overlappedChunks = [];
-    for (let i = 0; i < chunks.length; i++) {
-      let chunk = chunks[i];
-      if (i > 0) {
-        // Add overlap from previous chunk
-        const prevChunk = chunks[i - 1];
-        const overlap = prevChunk.slice(-overlapChars);
-        chunk = `${overlap}\n\n${chunk}`;
-      }
-      overlappedChunks.push(chunk);
-    }
-    return overlappedChunks;
-  }
-
   return chunks;
-}
-
-function extractDateFromSource(source) {
-  // Try to extract date from filename like "memory/2026-04-06.md" or "2026-04-06.md"
-  const match = source.match(/(\d{4}-\d{2}-\d{2})/);
-  if (match) {
-    return match[1];
-  }
-  return null;
-}
-
-function extractSectionHeader(text, position) {
-  const lines = text.split("\n");
-  let lastHeader = null;
-  let charCount = 0;
-
-  for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i];
-    if (line.match(/^#{2,4}\s/)) {
-      lastHeader = line.trim();
-    }
-    charCount += line.length + 1;
-    if (charCount >= position) {
-      break;
-    }
-  }
-
-  return lastHeader;
-}
-
-function uniqueSorted(values) {
-  return [...new Set(values.filter(Boolean))].toSorted();
-}
-
-function inferMemoryTags(text, source, sectionHeader) {
-  const haystack = `${source}\n${sectionHeader || ""}\n${text}`.toLowerCase();
-  const tags = [];
-
-  const rules = [
-    ["weather", ["cuaca", "weather", "hujan", "cerah", "bmkg", "temperature", "forecast"]],
-    ["news", ["news", "berita", "headline", "breaking", "topik"]],
-    ["finance", ["harga emas", "gold", "bitcoin", "crypto", "saham", "portfolio", "wallet"]],
-    ["project", ["project", "deploy", "release", "bug", "fix", "implementation", "phase"]],
-    ["infra", ["vps", "nginx", "pm2", "ssh", "server", "docker", "qdrant", "cloudflare"]],
-    ["calendar", ["calendar", "meeting", "schedule", "event", "jadwal"]],
-    ["automation", ["cron", "heartbeat", "automation", "workflow", "job"]],
-    ["personal", ["bray", "kuproy", "preference"]],
-  ];
-
-  for (const [tag, keywords] of rules) {
-    if (keywords.some((keyword) => haystack.includes(keyword))) {
-      tags.push(tag);
-    }
-  }
-
-  if (source.startsWith('memory/')) {
-    tags.push("daily-log");
-  }
-  if (source === "MEMORY.md") {
-    tags.push("long-term-memory");
-  }
-
-  return uniqueSorted(tags);
-}
-
-function shouldSkipCodeFile(relPath, text = "") {
-  const lower = relPath.toLowerCase();
-  if (!cfg.codeSkipGenerated) {return false;}
-
-  const basename = path.basename(lower);
-  if (
-    basename === "package-lock.json" ||
-    basename === "pnpm-lock.yaml" ||
-    basename === "yarn.lock" ||
-    basename.endsWith(".min.js") ||
-    basename.endsWith(".min.css")
-  ) {
-    return true;
-  }
-
-  if (
-    lower.includes("/dist/") ||
-    lower.includes("/build/") ||
-    lower.includes("/.next/") ||
-    lower.includes("/coverage/") ||
-    lower.includes("/vendor/")
-  ) {
-    return true;
-  }
-
-  if ((lower.endsWith(".json") || lower.endsWith(".md")) && text.length > 120000) {
-    return true;
-  }
-
-  return false;
-}
-
-function inferCodeTags(source, relPath = "") {
-  const haystack = `${source}\n${relPath}`.toLowerCase();
-  const tags = [];
-  const ext = path.extname(relPath).toLowerCase();
-
-  const extMap = {
-    ".md": "docs",
-    ".ts": "typescript",
-    ".tsx": "react",
-    ".js": "javascript",
-    ".jsx": "react",
-    ".py": "python",
-    ".go": "golang",
-    ".sql": "sql",
-    ".sh": "shell",
-    ".json": "config",
-    ".yaml": "config",
-    ".yml": "config",
-  };
-  if (extMap[ext]) {
-    tags.push(extMap[ext]);
-  }
-  if (haystack.includes("test") || haystack.includes("spec")) {
-    tags.push("tests");
-  }
-  if (haystack.includes("readme") || haystack.includes("docs/")) {
-    tags.push("docs");
-  }
-  if (haystack.includes("package.json") || haystack.includes("go.mod")) {
-    tags.push("dependency");
-  }
-
-  return uniqueSorted(tags);
-}
-
-function estimateWordCount(text) {
-  return text.trim() ? text.trim().split(/\s+/).length : 0;
 }
 
 function isLikelyBinary(buf) {
@@ -575,10 +421,6 @@ async function collectCodeDocuments(project) {
     }
 
     const rel = path.relative(project.root, abs);
-    if (shouldSkipCodeFile(rel, text)) {
-      continue;
-    }
-
     const source = `code:${project.id}:${rel}`;
     docs.push({
       source,
@@ -588,7 +430,6 @@ async function collectCodeDocuments(project) {
         project_id: project.id,
         project_root: project.root,
         rel_path: rel,
-        tags: inferCodeTags(source, rel),
       },
     });
   }
@@ -601,54 +442,23 @@ async function indexDocuments(docs) {
   const points = [];
 
   for (const doc of docs) {
-    let chunks = chunkText(doc.text, cfg.chunkChars, 200); // 200 char overlap
-    if (doc.meta.kind === "code" && chunks.length > cfg.codeMaxChunksPerFile) {
-      chunks = chunks.slice(0, cfg.codeMaxChunksPerFile);
-    }
+    const chunks = chunkText(doc.text, cfg.chunkChars);
     totalChunks += chunks.length;
 
-    // Extract date from source if it's a memory file
-    const extractedDate = extractDateFromSource(doc.source);
-
     for (let i = 0; i < chunks.length; i += 1) {
-      const rawChunk = chunks[i];
-      let text = rawChunk;
-      const chunkPosition = doc.text.indexOf(rawChunk.slice(0, Math.min(rawChunk.length, 120)).trim());
-      const sectionHeader = doc.meta.kind === "memory"
-        ? extractSectionHeader(doc.text, chunkPosition >= 0 ? chunkPosition : 0)
-        : null;
-
-      if (sectionHeader) {
-        text = `${sectionHeader}\n\n${rawChunk}`;
-      }
-
+      const text = chunks[i];
       const vector = await embed(text);
       const id = hexToUuid(sha256(`${doc.source}\n${i}\n${text}`));
-
-      const payload = {
-        source: doc.source,
-        chunk_index: i,
-        text,
-        updated_at: new Date().toISOString(),
-        section_header: sectionHeader,
-        word_count: estimateWordCount(text),
-        ...doc.meta,
-      };
-
-      if (doc.meta.kind === "memory") {
-        payload.tags = inferMemoryTags(text, doc.source, sectionHeader);
-      } else {
-        payload.tags = uniqueSorted(doc.meta.tags || []);
-      }
-
-      if (extractedDate) {
-        payload.date = extractedDate;
-      }
-
       points.push({
         id,
         vector,
-        payload,
+        payload: {
+          source: doc.source,
+          chunk_index: i,
+          text,
+          updated_at: new Date().toISOString(),
+          ...doc.meta,
+        },
       });
 
       if (points.length >= cfg.batchSize) {
